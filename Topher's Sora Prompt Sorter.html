@@ -99,7 +99,7 @@
 
     .controls {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       gap: 10px;
       justify-content: flex-start;
       width: 100%;
@@ -124,6 +124,47 @@
     .file-button {
       width: 100%;
       text-align: center;
+    }
+
+    .file-button.split {
+      flex: 1;
+      min-width: 0;
+      width: auto;
+      padding: 0 12px;
+    }
+
+    .has-tooltip {
+      position: relative;
+    }
+
+    .has-tooltip::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 10px);
+      z-index: 20;
+      width: min(300px, 80vw);
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 0 12px 28px rgba(31, 37, 32, 0.16);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.35;
+      opacity: 0;
+      pointer-events: none;
+      text-align: center;
+      transform: translateX(-50%);
+      visibility: hidden;
+      white-space: normal;
+    }
+
+    .has-tooltip:hover::after,
+    .has-tooltip:focus-visible::after {
+      opacity: 1;
+      visibility: visible;
     }
 
     button.secondary,
@@ -183,10 +224,37 @@
     }
 
     .stat strong {
-      display: block;
       margin-top: 6px;
       font-size: 28px;
       line-height: 1;
+    }
+
+    .stat-value {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 3px solid #dfe5df;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 700ms linear infinite;
+      opacity: 0;
+      transform: translateY(3px);
+      transition: opacity 1s ease;
+    }
+
+    .spinner.visible {
+      opacity: 1;
+    }
+
+    @keyframes spin {
+      to {
+        transform: translateY(3px) rotate(360deg);
+      }
     }
 
     .output {
@@ -198,9 +266,9 @@
     }
 
     .output-header {
-      display: flex;
+      display: grid;
+      grid-template-columns: minmax(120px, 1fr) auto minmax(220px, 1fr);
       align-items: center;
-      justify-content: space-between;
       gap: 16px;
       min-height: 71px;
       padding: 14px 16px;
@@ -209,30 +277,37 @@
 
     .output-header strong {
       font-size: 16px;
+      justify-self: start;
     }
 
     .preview-actions {
       display: flex;
       align-items: center;
       gap: 8px;
+      justify-self: end;
     }
 
-    .duplicate-toggle {
+    .similarity-control {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      margin-right: 10px;
+      gap: 10px;
+      justify-self: center;
       color: var(--muted);
       font-size: 13px;
       font-weight: 700;
       white-space: nowrap;
     }
 
-    .duplicate-toggle input {
-      width: 16px;
-      height: 16px;
+    .similarity-control input {
+      width: 160px;
       margin: 0;
       accent-color: var(--accent);
+    }
+
+    .similarity-value {
+      display: inline-block;
+      min-width: 36px;
+      text-align: right;
     }
 
     .preview-content {
@@ -243,33 +318,45 @@
       display: flex;
       flex-direction: column;
       gap: 30px;
-      overflow: auto;
-      border: 0;
-      padding: 32px 16px 16px;
-      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      color: var(--text);
-      outline: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+	      border: 0;
+	      padding: 32px 16px 16px;
+	      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	      color: var(--text);
+	      outline: 0;
       white-space: pre-wrap;
-      cursor: text;
+      overflow-wrap: anywhere;
+	      cursor: text;
       user-select: text;
       -webkit-user-select: text;
       scrollbar-color: #9aa79f #eef1ed;
       scrollbar-width: thin;
     }
 
-    .preview-prompt {
-      position: relative;
-      margin: 0;
+	    .preview-prompt {
+	      position: relative;
+	      margin: 0;
       white-space: pre-wrap;
-    }
-
-    .preview-prompt:not(:last-child)::after {
-      content: "";
-      display: block;
+      overflow-wrap: anywhere;
       width: 100%;
+	    }
+
+	    .preview-prompt:not(:last-child)::after {
+	      content: "";
+	      display: block;
+	      width: 100%;
       height: 1px;
       margin: 30px auto 0;
-      background: #edf0eb;
+	      background: #edf0eb;
+	    }
+
+    .preview-more {
+      color: var(--muted);
+      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      margin-bottom: 20px;
+      text-align: center;
+      white-space: nowrap;
     }
 
     .preview-content::-webkit-scrollbar {
@@ -305,10 +392,20 @@
         padding: 20px 0;
       }
 
-      header,
-      .output-header {
+      header {
         align-items: stretch;
         flex-direction: column;
+      }
+
+      .output-header {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .output-header strong,
+      .similarity-control,
+      .preview-actions {
+        justify-self: stretch;
       }
 
       .top-grid {
@@ -322,58 +419,68 @@
     <header>
       <div>
         <h1>Topher&apos;s Sora Prompt Sorter</h1>
-        <p class="subtitle">Import your generations.json files from the official Sora export to organize and de-duplicate all your prompts.</p>
+        <p class="subtitle">Import your generations JSON files from the official Sora export to organize and de-duplicate all your prompts.</p>
       </div>
-      <button class="secondary" id="clearButton" type="button" disabled>Clear</button>
+      <button class="compact" id="clearButton" type="button" disabled>Restart</button>
     </header>
 
     <section class="top-grid" aria-label="Conversion controls and summary">
       <div class="panel drop-zone" id="dropZone">
         <div class="controls">
-          <label class="file-button secondary" for="fileInput">Choose generations.json Files</label>
-          <input id="fileInput" type="file" accept=".json,application/json" multiple>
+		          <label class="file-button secondary split has-tooltip" for="fileInput" data-tooltip="Choose one or many generations JSON files. You can upload some, then upload even more.">Choose Files</label>
+		          <input id="fileInput" type="file" accept=".json,application/json" multiple>
+		          <button class="file-button secondary split has-tooltip" id="folderButton" type="button" data-tooltip="Choose a top-level folder that contains all your different generations JSON files within.">Choose Folder</button>
+	          <input id="folderInput" type="file" accept=".json,application/json" webkitdirectory directory multiple>
         </div>
-      </div>
-      <div class="panel stat">
-        <span>Files loaded</span>
-        <strong id="fileCount">0</strong>
       </div>
 	      <div class="panel stat">
-	        <span id="promptCountLabel">Unique prompts</span>
-	        <strong id="promptCount">0</strong>
+	        <span>Files loaded</span>
+	        <strong id="fileCount">0</strong>
 	      </div>
+		      <div class="panel stat">
+		        <span id="promptCountLabel">Unique prompts</span>
+		        <div class="stat-value">
+		          <strong id="promptCount">0</strong>
+		          <span class="spinner" id="promptSpinner" hidden aria-label="Sorting prompts"></span>
+		        </div>
+		      </div>
     </section>
 
-    <section class="panel output">
-      <div class="output-header">
-        <strong>Preview</strong>
-        <p id="statusText" hidden></p>
-        <div class="preview-actions">
-          <label class="duplicate-toggle" id="duplicateToggleLabel" hidden>
-            <input id="showDuplicatesInput" type="checkbox">
-            <span>Include duplicates</span>
-          </label>
-          <button class="compact" id="previewCopyButton" type="button" hidden disabled>Copy to Clipboard</button>
-          <button id="downloadButton" type="button" hidden disabled>Download</button>
-        </div>
+	    <section class="panel output">
+	      <div class="output-header">
+	        <strong>Preview</strong>
+	        <p id="statusText" hidden></p>
+	        <label class="similarity-control" id="similarityControl" hidden>
+	          <span>Uniqueness</span>
+	          <input id="similarityInput" type="range" min="0" max="100" value="50">
+	          <span class="similarity-value" id="similarityValue">50%</span>
+	        </label>
+	        <div class="preview-actions">
+	          <button class="compact" id="previewCopyButton" type="button" hidden disabled>Copy to Clipboard</button>
+	          <button id="downloadButton" type="button" hidden disabled>Download</button>
+	        </div>
       </div>
       <div class="preview-content" id="csvOutput" aria-live="polite"></div>
     </section>
   </main>
 
   <script>
-    const dropZone = document.getElementById("dropZone");
-    const fileInput = document.getElementById("fileInput");
+	    const dropZone = document.getElementById("dropZone");
+	    const fileInput = document.getElementById("fileInput");
+	    const folderButton = document.getElementById("folderButton");
+	    const folderInput = document.getElementById("folderInput");
     const clearButton = document.getElementById("clearButton");
     const previewCopyButton = document.getElementById("previewCopyButton");
     const downloadButton = document.getElementById("downloadButton");
-    const duplicateToggleLabel = document.getElementById("duplicateToggleLabel");
-    const showDuplicatesInput = document.getElementById("showDuplicatesInput");
+    const similarityControl = document.getElementById("similarityControl");
+    const similarityInput = document.getElementById("similarityInput");
+    const similarityValue = document.getElementById("similarityValue");
     const csvOutput = document.getElementById("csvOutput");
     const statusText = document.getElementById("statusText");
-    const fileCount = document.getElementById("fileCount");
-    const promptCountLabel = document.getElementById("promptCountLabel");
-    const promptCount = document.getElementById("promptCount");
+	    const fileCount = document.getElementById("fileCount");
+	    const promptCountLabel = document.getElementById("promptCountLabel");
+	    const promptCount = document.getElementById("promptCount");
+	    const promptSpinner = document.getElementById("promptSpinner");
 
 	    const state = {
 	      filesLoaded: 0,
@@ -389,7 +496,7 @@
 	      bands: 16,
 	      rowsPerBand: 4,
 	      shingleSize: 5,
-	      threshold: 0.82
+	      looseShingleSize: 3
 	    };
 
 	    const HASH_PRIME = 2147483647;
@@ -398,6 +505,8 @@
 	      a: ((index + 1) * 2654435761) % HASH_PRIME || 1,
 	      b: ((index + 1) * 1597334677) % HASH_PRIME
 	    }));
+
+	    const countFormatter = new Intl.NumberFormat();
 
 	    function formatPromptLine(value) {
 	      return String(value)
@@ -410,6 +519,19 @@
 	      return formatPromptLine(value);
 	    }
 
+	    function formatCsvCell(value) {
+	      return `"${String(value).replace(/\t/g, " ").replace(/\r\n?/g, "\n").trim().replaceAll('"', '""')}"`;
+	    }
+
+	    function escapeHtml(value) {
+	      return String(value)
+	        .replaceAll("&", "&amp;")
+	        .replaceAll("<", "&lt;")
+	        .replaceAll(">", "&gt;")
+	        .replaceAll('"', "&quot;")
+	        .replaceAll("'", "&#039;");
+	    }
+
 	    function makePromptRecord(item) {
 	      return {
 	        id: item.id || "",
@@ -419,15 +541,40 @@
 	      };
 	    }
 
-	    function buildRows() {
-	      const header = ["ID", "Prompt", "Width", "Height"].join("\t");
-	      const rows = state.outputRecords.map((record) => [
+	    function rowValues(record, index) {
+	      return [
+	        index + 1,
 	        record.id,
 	        record.prompt,
 	        record.width,
 	        record.height
-	      ].map(formatTsvCell).join("\t"));
+	      ];
+	    }
+
+	    function buildTsvRows() {
+	      const header = ["Order", "ID", "Prompt", "Width", "Height"].join("\t");
+	      const rows = state.outputRecords.map((record, index) => rowValues(record, index).map(formatTsvCell).join("\t"));
 	      return [header, ...rows].join("\r\n");
+	    }
+
+	    function buildCsvRows() {
+	      const header = ["Order", "ID", "Prompt", "Width", "Height"].map(formatCsvCell).join(",");
+	      const rows = state.outputRecords.map((record, index) => rowValues(record, index).map(formatCsvCell).join(","));
+	      return [header, ...rows].join("\r\n");
+	    }
+
+	    function buildClipboardHtml() {
+	      const headers = ["Order", "ID", "Prompt", "Width", "Height"];
+	      const headerRow = headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("");
+	      const rows = state.outputRecords.map((record, index) => {
+	        const cells = rowValues(record, index).map((value) => {
+	          const cellValue = String(value).replace(/\t/g, " ").replace(/\r\n?/g, "\n").trim();
+	          return `<td style="white-space: pre-wrap;">${escapeHtml(cellValue).replaceAll("\n", "<br>")}</td>`;
+	        }).join("");
+	        return `<tr>${cells}</tr>`;
+	      }).join("");
+
+	      return `<table><thead><tr>${headerRow}</tr></thead><tbody>${rows}</tbody></table>`;
 	    }
 
 	    function buildPreviewRows() {
@@ -436,25 +583,35 @@
 
 	    function renderPreview() {
 	      csvOutput.replaceChildren();
-	      for (const prompt of buildPreviewRows()) {
+	      const previewRows = buildPreviewRows();
+	      const visibleRows = previewRows.slice(0, 25);
+	      for (const prompt of visibleRows) {
 	        const promptElement = document.createElement("div");
 	        promptElement.className = "preview-prompt";
 	        promptElement.textContent = prompt;
 	        csvOutput.appendChild(promptElement);
 	      }
+
+	      if (previewRows.length > visibleRows.length) {
+	        const moreElement = document.createElement("div");
+	        moreElement.className = "preview-more";
+	        moreElement.textContent = `+${countFormatter.format(previewRows.length - visibleRows.length)} more prompts`;
+	        csvOutput.appendChild(moreElement);
+	      }
 	    }
 
 	    function syncOutputPrompts() {
-	      state.outputRecords = [...(showDuplicatesInput.checked ? state.records : state.dedupedRecords)]
+	      state.outputRecords = [...state.dedupedRecords]
 	        .sort((left, right) => String(right.id).localeCompare(String(left.id)));
 	    }
 
 	    function render() {
 	      syncOutputPrompts();
 	      const hasPrompts = state.outputRecords.length > 0;
-	      fileCount.textContent = state.filesLoaded;
-	      promptCountLabel.textContent = showDuplicatesInput.checked ? "Total prompts" : "Unique prompts";
-	      promptCount.textContent = state.outputRecords.length;
+	      fileCount.textContent = countFormatter.format(state.filesLoaded);
+	      promptCountLabel.textContent = Number(similarityInput.value) === 0 ? "Total prompts" : "Unique prompts";
+	      promptCount.textContent = countFormatter.format(state.outputRecords.length);
+	      similarityValue.textContent = `${similarityInput.value}%`;
 	      if (hasPrompts) {
 	        renderPreview();
 	      } else {
@@ -465,10 +622,48 @@
 	      clearButton.disabled = state.filesLoaded === 0 && state.records.length === 0 && state.errors === 0;
 	      previewCopyButton.disabled = !hasPrompts;
 	      downloadButton.disabled = !hasPrompts;
-	      duplicateToggleLabel.hidden = state.records.length === 0;
+	      similarityControl.hidden = state.records.length === 0;
 	      previewCopyButton.hidden = !hasPrompts;
 	      downloadButton.hidden = !hasPrompts;
 
+	    }
+
+	    function waitForPaint() {
+	      return new Promise((resolve) => {
+	        requestAnimationFrame(() => requestAnimationFrame(resolve));
+	      });
+	    }
+
+	    function showSpinner() {
+	      promptSpinner.hidden = false;
+	      requestAnimationFrame(() => promptSpinner.classList.add("visible"));
+	    }
+
+	    function hideSpinner() {
+	      promptSpinner.classList.remove("visible");
+	      promptSpinner.hidden = true;
+	    }
+
+	    function createSpinnerDelay(delay = 200) {
+	      if (delay <= 0) {
+	        showSpinner();
+	        return hideSpinner;
+	      }
+
+	      const timeout = window.setTimeout(showSpinner, delay);
+
+	      return () => {
+	        window.clearTimeout(timeout);
+	        hideSpinner();
+	      };
+	    }
+
+	    async function refreshDedupe() {
+	      showSpinner();
+	      await waitForPaint();
+	      updateOutputPrompts();
+	      render();
+	      hideSpinner();
 	    }
 
 	    function normalizeWords(value) {
@@ -480,21 +675,62 @@
 	        .filter(Boolean);
 	    }
 
-	    function makeShingles(prompt) {
+	    const STOPWORDS = new Set([
+	      "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "have", "he", "her", "his", "in", "into", "is", "it", "its",
+	      "of", "on", "or", "she", "that", "the", "their", "them", "they", "this", "to", "was", "were", "with"
+	    ]);
+
+	    function makeShingles(prompt, size = DEDUPE.shingleSize) {
 	      const words = normalizeWords(prompt);
 	      if (words.length === 0) {
 	        return new Set();
 	      }
 
-	      if (words.length <= DEDUPE.shingleSize) {
+	      if (words.length <= size) {
 	        return new Set([words.join(" ")]);
 	      }
 
 	      const shingles = new Set();
-	      for (let index = 0; index <= words.length - DEDUPE.shingleSize; index += 1) {
-	        shingles.add(words.slice(index, index + DEDUPE.shingleSize).join(" "));
+	      for (let index = 0; index <= words.length - size; index += 1) {
+	        shingles.add(words.slice(index, index + size).join(" "));
 	      }
 	      return shingles;
+	    }
+
+	    function buildTokenWeights(records) {
+	      const documentFrequency = new Map();
+	      const totalDocuments = records.length || 1;
+
+	      for (const record of records) {
+	        const uniqueTokens = new Set();
+	        for (const word of normalizeWords(record.prompt)) {
+	          if (word.length <= 2 || STOPWORDS.has(word)) {
+	            continue;
+	          }
+	          uniqueTokens.add(word);
+	        }
+
+	        for (const token of uniqueTokens) {
+	          documentFrequency.set(token, (documentFrequency.get(token) || 0) + 1);
+	        }
+	      }
+
+	      const weights = new Map();
+	      for (const [token, frequency] of documentFrequency) {
+	        weights.set(token, Math.log((1 + totalDocuments) / (1 + frequency)) + 1);
+	      }
+	      return weights;
+	    }
+
+	    function makeTokenProfile(prompt, tokenWeights) {
+	      const counts = new Map();
+	      for (const word of normalizeWords(prompt)) {
+	        if (word.length <= 2 || STOPWORDS.has(word)) {
+	          continue;
+	        }
+	        counts.set(word, (counts.get(word) || 0) + (tokenWeights.get(word) || 1));
+	      }
+	      return counts;
 	    }
 
 	    function hashString(value) {
@@ -543,30 +779,81 @@
 	      return shared / (left.size + right.size - shared);
 	    }
 
-	    function dedupeRecords(records) {
-	      const kept = [];
-	      const keptShingles = [];
-	      const buckets = new Map();
+	    function tokenCosineSimilarity(left, right) {
+	      if (left.size === 0 && right.size === 0) {
+	        return 1;
+	      }
 
-	      for (const record of records) {
-	        const shingles = makeShingles(record.prompt);
-	        const signature = makeSignature(shingles);
-	        const candidateIndexes = new Set();
+	      let dot = 0;
+	      let leftMagnitude = 0;
+	      let rightMagnitude = 0;
 
-	        for (let band = 0; band < DEDUPE.bands; band += 1) {
-	          const start = band * DEDUPE.rowsPerBand;
-	          const key = `${band}:${signature.slice(start, start + DEDUPE.rowsPerBand).join("-")}`;
-	          const matches = buckets.get(key);
-	          if (matches) {
-	            for (const index of matches) {
-	              candidateIndexes.add(index);
-	            }
-	          }
+	      for (const [token, count] of left) {
+	        dot += count * (right.get(token) || 0);
+	        leftMagnitude += count * count;
+	      }
+
+	      for (const count of right.values()) {
+	        rightMagnitude += count * count;
+	      }
+
+	      if (leftMagnitude === 0 || rightMagnitude === 0) {
+	        return 0;
+	      }
+
+	      return dot / (Math.sqrt(leftMagnitude) * Math.sqrt(rightMagnitude));
+	    }
+
+	    function tokenContainmentSimilarity(left, right) {
+	      if (left.size === 0 && right.size === 0) {
+	        return 1;
+	      }
+
+	      const leftWeight = [...left.values()].reduce((sum, value) => sum + value, 0);
+	      const rightWeight = [...right.values()].reduce((sum, value) => sum + value, 0);
+	      const [smaller, larger, smallerWeight] = leftWeight < rightWeight
+	        ? [left, right, leftWeight]
+	        : [right, left, rightWeight];
+	      let sharedWeight = 0;
+
+	      for (const [token, weight] of smaller) {
+	        if (larger.has(token)) {
+	          sharedWeight += Math.min(weight, larger.get(token));
 	        }
+	      }
+
+	      return smallerWeight === 0 ? 0 : sharedWeight / smallerWeight;
+	    }
+
+	    function promptSimilarity(left, right) {
+	      return Math.max(
+	        jaccardSimilarity(left.shingles, right.shingles),
+	        jaccardSimilarity(left.looseShingles, right.looseShingles),
+	        tokenCosineSimilarity(left.tokens, right.tokens),
+	        tokenContainmentSimilarity(left.tokens, right.tokens)
+	      );
+	    }
+
+	    function makePromptProfile(prompt, tokenWeights) {
+	      return {
+	        shingles: makeShingles(prompt, DEDUPE.shingleSize),
+	        looseShingles: makeShingles(prompt, DEDUPE.looseShingleSize),
+	        tokens: makeTokenProfile(prompt, tokenWeights)
+	      };
+	    }
+
+	    function dedupeRecords(records) {
+	      const sortedRecords = [...records].sort((left, right) => String(right.id).localeCompare(String(left.id)));
+	      const tokenWeights = buildTokenWeights(sortedRecords);
+	      const kept = [];
+	      const keptProfiles = [];
+
+	      for (const record of sortedRecords) {
+	        const profile = makePromptProfile(record.prompt, tokenWeights);
 
 	        let isDuplicate = false;
-	        for (const index of candidateIndexes) {
-	          if (jaccardSimilarity(shingles, keptShingles[index]) >= DEDUPE.threshold) {
+	        for (let index = 0; index < keptProfiles.length; index += 1) {
+	          if (promptSimilarity(profile, keptProfiles[index]) >= getSimilarityThreshold()) {
 	            isDuplicate = true;
 	            break;
 	          }
@@ -576,18 +863,8 @@
 	          continue;
 	        }
 
-	        const keptIndex = kept.length;
 	        kept.push(record);
-	        keptShingles.push(shingles);
-
-	        for (let band = 0; band < DEDUPE.bands; band += 1) {
-	          const start = band * DEDUPE.rowsPerBand;
-	          const key = `${band}:${signature.slice(start, start + DEDUPE.rowsPerBand).join("-")}`;
-	          if (!buckets.has(key)) {
-	            buckets.set(key, []);
-	          }
-	          buckets.get(key).push(keptIndex);
-	        }
+	        keptProfiles.push(profile);
 	      }
 
 	      return kept;
@@ -596,6 +873,10 @@
 	    function updateOutputPrompts() {
 	      state.dedupedRecords = dedupeRecords(state.records);
 	      syncOutputPrompts();
+	    }
+
+	    function getSimilarityThreshold() {
+	      return 0.95 - (Number(similarityInput.value) / 200);
 	    }
 
     function collectGenerationObjects(value) {
@@ -616,13 +897,19 @@
       return [];
     }
 
-    async function processFiles(fileList) {
-      const files = Array.from(fileList).filter((file) => {
-        const isJson = file.name.toLowerCase().endsWith(".json") || file.type === "application/json";
+	    async function processFiles(fileList, options = {}) {
+	      const incomingFiles = Array.from(fileList);
+	      const shouldShowSpinnerImmediately = options.generationsOnly || incomingFiles.length > 25;
+	      const stopSpinner = options.useExistingSpinner ? null : createSpinnerDelay(shouldShowSpinnerImmediately ? 0 : 200);
+	      await waitForPaint();
+	      const files = incomingFiles.filter((file) => {
+        const fileName = file.name.toLowerCase();
+        const isJson = fileName.endsWith(".json") || file.type === "application/json";
+        const matchesFolderFilter = !options.generationsOnly || fileName.includes("generations");
         if (!isJson) {
           state.errors += 1;
         }
-        return isJson;
+        return isJson && matchesFolderFilter;
       });
 
 	      for (const file of files) {
@@ -640,22 +927,87 @@
 	          state.filesLoaded += 1;
           state.objectsScanned += objects.length;
 
-	          for (const item of objects) {
-	            if (item && typeof item.prompt === "string" && item.prompt.trim()) {
-	              state.records.push(makePromptRecord(item));
-	            }
-	          }
+		          for (const item of objects) {
+		            if (item && typeof item.prompt === "string" && item.prompt.trim().length >= 5) {
+		              state.records.push(makePromptRecord(item));
+		            }
+		          }
 
         } catch (error) {
           state.errors += 1;
         }
 	      }
 
-	      updateOutputPrompts();
-	      render();
+		      if (options.useExistingSpinner) {
+		        updateOutputPrompts();
+		        render();
+		      } else {
+		        await refreshDedupe();
+		      }
+		      if (stopSpinner) {
+		        stopSpinner();
+		      }
+		    }
+
+	    async function collectGenerationFilesFromDirectory(directoryHandle) {
+	      const files = [];
+
+	      async function walk(handle) {
+	        for await (const entry of handle.values()) {
+	          if (entry.kind === "directory") {
+	            await walk(entry);
+	            continue;
+	          }
+
+	          if (entry.kind !== "file") {
+	            continue;
+	          }
+
+	          const fileName = entry.name.toLowerCase();
+	          if (!fileName.includes("generations") || !fileName.endsWith(".json")) {
+	            continue;
+	          }
+
+	          files.push(await entry.getFile());
+	        }
+	      }
+
+	      await walk(directoryHandle);
+	      return files;
 	    }
 
-    function clearState() {
+	    async function chooseFolder() {
+	      if (window.showDirectoryPicker) {
+	        try {
+	          let directoryHandle;
+	          try {
+	            directoryHandle = await window.showDirectoryPicker({ mode: "read", startIn: "downloads" });
+	          } catch (error) {
+	            if (error.name === "AbortError") {
+	              return;
+	            }
+	            directoryHandle = await window.showDirectoryPicker({ mode: "read" });
+	          }
+	          const stopSpinner = createSpinnerDelay(0);
+	          await waitForPaint();
+	          try {
+	            const files = await collectGenerationFilesFromDirectory(directoryHandle);
+	            await processFiles(files, { useExistingSpinner: true });
+	          } finally {
+	            stopSpinner();
+	          }
+	          return;
+	        } catch (error) {
+	          if (error.name === "AbortError") {
+	            return;
+	          }
+	        }
+	      }
+
+	      folderInput.click();
+	    }
+
+	    function clearState() {
 	      state.filesLoaded = 0;
 	      state.objectsScanned = 0;
 	      state.records = [];
@@ -663,17 +1015,18 @@
 	      state.dedupedRecords = [];
 	      state.loadedFileHashes = new Set();
 	      state.errors = 0;
-	      showDuplicatesInput.checked = false;
-	      fileInput.value = "";
-	      render();
+		      similarityInput.value = "50";
+		      fileInput.value = "";
+		      folderInput.value = "";
+		      render();
     }
 
     function downloadRows() {
-      const blob = new Blob([buildRows()], { type: "text/tab-separated-values;charset=utf-8" });
+      const blob = new Blob([buildCsvRows()], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-	      link.download = "Sora Prompts.tsv";
+	      link.download = "Sora Prompts.csv";
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -681,7 +1034,16 @@
     }
 
     async function copyRows() {
-      await navigator.clipboard.writeText(buildRows());
+      if (window.ClipboardItem && navigator.clipboard.write) {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/html": new Blob([buildClipboardHtml()], { type: "text/html" }),
+            "text/plain": new Blob([buildCsvRows()], { type: "text/plain" })
+          })
+        ]);
+      } else {
+        await navigator.clipboard.writeText(buildCsvRows());
+      }
       previewCopyButton.textContent = "Copied";
       setTimeout(() => {
         previewCopyButton.textContent = "Copy to Clipboard";
@@ -706,12 +1068,24 @@
       processFiles(event.dataTransfer.files);
     });
 
-    fileInput.addEventListener("change", (event) => {
-      processFiles(event.target.files);
-    });
+	    fileInput.addEventListener("change", (event) => {
+	      processFiles(event.target.files);
+	    });
+
+	    folderButton.addEventListener("click", chooseFolder);
+
+	    folderInput.addEventListener("change", (event) => {
+	      processFiles(event.target.files, { generationsOnly: true });
+	    });
 
     clearButton.addEventListener("click", clearState);
-    showDuplicatesInput.addEventListener("change", render);
+    similarityInput.addEventListener("input", () => {
+      similarityValue.textContent = `${similarityInput.value}%`;
+    });
+
+    similarityInput.addEventListener("change", () => {
+      refreshDedupe();
+    });
     previewCopyButton.addEventListener("click", copyRows);
     downloadButton.addEventListener("click", downloadRows);
 
